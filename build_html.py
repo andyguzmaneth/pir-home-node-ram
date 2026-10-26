@@ -27,7 +27,8 @@ def med(xs):
     return round(statistics.median(xs), 2) if xs else None
 
 
-S = list(csv.DictReader(open(f"{R}/samples.csv")))
+END = "2026-10-26T07:15:00Z"  # test over: restore ran at 07:10:42, later rows have DAppNode back on
+S = [r for r in csv.DictReader(open(f"{R}/samples.csv")) if r["ts"] <= END]
 results = json.load(open(f"{R}/results.json"))
 recov = json.load(open(f"{R}/recoveries.json"))
 
@@ -47,17 +48,28 @@ def breakdown(rows):
 
 idle = [r for r in S if r["phase"] == "rest" and SETTLED[0] <= r["ts"] <= SETTLED[1]
         and (num(r["head_lag_s"]) or 0) < 60]
-top = next(s for s in results if s["run"] == "B" and s.get("gb") == 18.5)
-tail = [r for r in S if r["phase"] == "B:18.5" and r["ts"] >= top["end"][:14] + "40"]
-tail = tail or [r for r in S if r["phase"] == "B:18.5"]
+# Kernel OOM kills of the dummy PIR process (journal lines saved in oom-kills.log)
+kills = []
+for line in open(f"{R}/oom-kills.log") if os.path.exists(f"{R}/oom-kills.log") else []:
+    if "Out of memory: Killed" in line:
+        kills.append(line[:19] + "Z")
+for s in results:
+    n = sum(1 for k in kills if s.get("end") and s["start"] <= k <= s["end"])
+    if n:
+        s["outcome"] = "oom"
+        s["note"] = f"PIR process OOM-killed {n} times (systemd restarted it; the orchestrator logged a pass)"
+
+# Largest step that held: B 18 GB, last 10 minutes
+top = next(s for s in results if s["run"] == "B" and s.get("gb") == 18.0)
+tail = [r for r in S if r["phase"] == "B:18" and r["ts"] >= top["end"][:14] + "10"]
 bd = {"idle": breakdown(idle), "full": breakdown(tail), "idle_n": len(idle), "full_n": len(tail)}
 
 series = {}
 for rid, (a, z) in WINDOWS.items():
     rows = [r for r in S if a <= r["ts"] <= z]
-    series[rid] = [[r["ts"][11:19], num(r["held_gb"]) or 0,
+    series[rid] = {"day": a[:10], "rows": [[r["ts"][11:19], num(r["held_gb"]) or 0,
                     round((num(r["head_lag_s"]) or 0) / 12, 2), num(r["disk_read_mbs"]),
-                    num(r["mem_available_gb"])] for r in rows]
+                    num(r["mem_available_gb"])] for r in rows]}
 
 steps = [{k: s.get(k) for k in ("run", "gb", "outcome", "lag_tail_median_s", "lag_max_s",
                                  "mem_available_min_gb", "import_p95_ms", "start", "end")} for s in results]
@@ -82,7 +94,7 @@ for rid in "ABC":
     behind[rid] = [sum(1 for r in sq if (num(r["head_lag_s"]) or 0) > 60), len(sq)]
 nosq = [r for r in S if r["phase"] in ("baseline", "rest")]
 behind["idle"] = [sum(1 for r in nosq if (num(r["head_lag_s"]) or 0) > 60), len(nosq)]
-data = {"bd": bd, "series": series, "steps": steps, "recov": recov, "behind": behind,
+data = {"kills": [k[11:19] for k in kills], "kill_days": [k[:10] for k in kills], "bd": bd, "series": series, "steps": steps, "recov": recov, "behind": behind,
         "span": [S[0]["ts"], S[-1]["ts"], len(S)]}
 tpl = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "report_template.html")).read()
 out = tpl.replace("/*DATA*/null", json.dumps(data, separators=(",", ":")))

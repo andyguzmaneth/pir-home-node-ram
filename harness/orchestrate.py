@@ -140,6 +140,12 @@ def wait_head(max_min):
     return None
 
 
+def holder_restarts():
+    out = subprocess.run(["systemctl", "show", "-p", "NRestarts", "--value", "pir-holder"],
+                         capture_output=True, text=True).stdout.strip()
+    return int(out) if out.isdigit() else 0
+
+
 def hold(run_id, gb, minutes, deadline):
     """Hold one squeeze level. Returns the step record."""
     rec = {"run": run_id, "gb": gb, "start": iso(), "hold_min": minutes}
@@ -148,6 +154,7 @@ def hold(run_id, gb, minutes, deadline):
     lags, mins, bad_since, short_since = [], [], None, None
     t0 = time.time()
     outcome = "pass"
+    restarts0 = holder_restarts()
     while time.time() - t0 < minutes * 60:
         time.sleep(TICK)
         l, m = lag(), mem_available_gb()
@@ -155,6 +162,11 @@ def hold(run_id, gb, minutes, deadline):
         mins.append(m)
         if not services_ok():
             outcome = "abort"
+            break
+        if holder_restarts() > restarts0:
+            # systemd restarts the holder and it refills in ~20 s, so the shortfall check below can miss a kill
+            outcome = "oom"
+            rec["note"] = "holder OOM-killed by the kernel"
             break
         held = float(get("held_gb", "0") or 0)
         if held < gb - 0.3 and time.time() - t0 > 120:

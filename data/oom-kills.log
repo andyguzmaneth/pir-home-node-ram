@@ -1,0 +1,10 @@
+2026-10-25T10:24:20+0000 dappnode kernel: tokio-rt invoked oom-killer: gfp_mask=0x140cca(GFP_HIGHUSER_MOVABLE|__GFP_COMP), order=0, oom_score_adj=0
+2026-10-25T10:24:21+0000 dappnode kernel: Out of memory: Killed process 14297 (python3) total-vm:19412580kB, anon-rss:19401220kB, file-rss:4kB, shmem-rss:0kB, UID:0 pgtables:38024kB oom_score_adj:1000
+2026-10-25T10:30:44+0000 dappnode kernel: tokio-rt-worker invoked oom-killer: gfp_mask=0x140cca(GFP_HIGHUSER_MOVABLE|__GFP_COMP), order=0, oom_score_adj=0
+2026-10-25T10:30:44+0000 dappnode kernel: Out of memory: Killed process 96360 (python3) total-vm:19412580kB, anon-rss:19401340kB, file-rss:4kB, shmem-rss:0kB, UID:0 pgtables:38032kB oom_score_adj:1000
+2026-10-25T10:37:08+0000 dappnode kernel: tokio-rt invoked oom-killer: gfp_mask=0x140cca(GFP_HIGHUSER_MOVABLE|__GFP_COMP), order=0, oom_score_adj=0
+2026-10-25T10:37:08+0000 dappnode kernel: Out of memory: Killed process 96636 (python3) total-vm:19412580kB, anon-rss:19401468kB, file-rss:4kB, shmem-rss:0kB, UID:0 pgtables:38028kB oom_score_adj:1000
+2026-10-25T10:43:32+0000 dappnode kernel: tokio-rt-worker invoked oom-killer: gfp_mask=0x140dca(GFP_HIGHUSER_MOVABLE|__GFP_COMP|__GFP_ZERO), order=0, oom_score_adj=0
+2026-10-25T10:43:32+0000 dappnode kernel: Out of memory: Killed process 96910 (python3) total-vm:19412580kB, anon-rss:19401228kB, file-rss:4kB, shmem-rss:0kB, UID:0 pgtables:38032kB oom_score_adj:1000
+2026-10-25T10:49:56+0000 dappnode kernel: tokio-rt invoked oom-killer: gfp_mask=0x140cca(GFP_HIGHUSER_MOVABLE|__GFP_COMP), order=0, oom_score_adj=0
+2026-10-25T10:49:57+0000 dappnode kernel: Out of memory: Killed process 97200 (python3) total-vm:19412580kB, anon-rss:19401456kB, file-rss:4kB, shmem-rss:0kB, UID:0 pgtables:38024kB oom_score_adj:1000

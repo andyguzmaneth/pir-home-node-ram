@@ -84,48 +84,47 @@ details summary{cursor:pointer;color:var(--ink-2);font-size:14px;margin:8px 0}
 <section class="tldr">
 <h2>TL;DR</h2>
 <ul>
-<li><b>The clients need about <span data-k="need"></span> GB that cannot be freed</b> (Reth heap <span data-k="reth"></span>, Lighthouse <span data-k="lh"></span>, kernel and other <span data-k="kern"></span>). Most of the other <span data-k="cache"></span> GB is page cache that holds Reth's database. The cache is useful, but the node gives it up.</li>
-<li><b>A PIR server can hold 18 GB and the node stays at head</b> (high confidence: passed in two runs). 18.5 GB passed once, with 0.6 GB of headroom left. We did not go past 19 GB, because the next step could have made the kernel kill Reth.</li>
-<li><b>PIR database size that fits:</b> about 4.5 GB with a 4x RAM rule of thumb, or about 11.5 GB with InsPIRe GPU's 1.6x. For planning, we suggest a budget of 16 GB of RAM (4 GB DB at 4x, 10 GB at 1.6x). This leaves room for Reth's heap to grow and for the PIR server's own working memory.</li>
-<li><b>RAM never made the node fall behind.</b> As the PIR server took RAM, Reth read more from disk (0.8 to 4.3 MB/s). Block import stayed under 360 ms (95th percentile), and lag stayed at about 8 s (under 1 block).</li>
+<li><b>The clients and the kernel need about <span data-k="need"></span> GB</b> (Reth heap <span data-k="reth"></span>, Lighthouse <span data-k="lh"></span>, kernel and other <span data-k="kern"></span>). With no PIR server, the rest of the RAM fills with page cache (<span data-k="cache"></span> GB, mostly Reth's database) and kernel buffers. The node uses that cache, but it gives the cache up when a PIR server needs the RAM.</li>
+<li><b>A PIR server can hold 18 GB and the node stays at head</b> (high confidence: passed in two runs, 0.7–1.2 GB of RAM left). At 18.5 GB the machine ran out of memory: the kernel killed the PIR process 5 times in 35 minutes. Reth and Lighthouse were never killed, because the PIR process was set to be killed first.</li>
+<li><b>PIR database size that fits:</b> about 4.5 GB with a 4x RAM rule of thumb, or about 11.2 GB with InsPIRe GPU's 1.6x. For planning, we suggest a budget of 16 GB of RAM (4 GB DB at 4x, 10 GB at 1.6x). This leaves room for Reth's heap to grow and for the PIR server's own working memory.</li>
+<li><b>RAM never made the node fall behind.</b> As the PIR server took RAM, Reth read more from disk (0.8 to 3.6 MB/s). Block import stayed under 350 ms (95th percentile), and lag stayed at about 8 s (under 1 block).</li>
 <li><b>When the node fell behind, the cause was Lighthouse, not RAM.</b> Lighthouse sometimes stopped sending new blocks to Reth for up to 13 minutes. This also happened with no PIR memory held, and it ended run C at 15 GB.</li>
 </ul>
 </section>
 
 <div class="kpis">
   <div class="kpi"><div class="v">31.4 GB</div><div class="l">RAM the OS sees (32 GiB VM)</div></div>
-  <div class="kpi"><div class="v"><span data-k="need"></span> GB</div><div class="l">Clients + kernel, not reclaimable</div></div>
-  <div class="kpi"><div class="v">18–18.5 GB</div><div class="l">Held by dummy PIR, node at head</div></div>
-  <div class="kpi"><div class="v">4.6 / 11.5 GB</div><div class="l">PIR DB at 4x / 1.6x blowup</div></div>
+  <div class="kpi"><div class="v"><span data-k="need"></span> GB</div><div class="l">Clients + kernel, at the edge</div></div>
+  <div class="kpi"><div class="v">18 GB</div><div class="l">Largest PIR RAM that held, node at head</div></div>
+  <div class="kpi"><div class="v">4.5 / 11.2 GB</div><div class="l">PIR DB at 4x / 1.6x blowup</div></div>
 </div>
 
 <h2>1. Where the 32 GB goes</h2>
-<p>Each bar is one state of the machine. In the top bar the node runs with no PIR server. The bottom bar is the end of the 18.5 GB step. The PIR memory came almost entirely out of the page cache, and the client processes kept their memory.</p>
+<p>Each bar is one state of the machine. In the top bar the node runs with no PIR server. The bottom bar is the end of the 18 GB step in run B. The PIR memory came out of the page cache (<span data-k="cache_d"></span> GB) and reclaimable kernel buffers (<span data-k="kern_d"></span> GB). Reth and Lighthouse kept their memory.</p>
 <div class="legend" id="bd-legend"></div>
 <div class="chart" id="bd"></div>
 <div class="tip" id="bd-tip"></div>
 <div class="scroll"><table id="bd-table"></table></div>
-<p class="note">Values are medians. "No PIR" uses <span data-k="idle_n"></span> samples (15 s apart) from a quiet period between runs B and C, when Reth was fully warm. "PIR 18.5 GB" uses the last minutes of that step. "Kernel, buffers, slab" is total minus free minus page cache minus process memory. Lighthouse is its resident set, which includes a small amount of file cache.</p>
+<p class="note">Values are medians. "No PIR" uses <span data-k="idle_n"></span> samples (15 s apart) from a quiet period between runs B and C, when Reth was fully warm. "PIR 18 GB" uses the last 10 minutes of that step. GB in this report means GiB (2<sup>30</sup> bytes), as the kernel reports it. "Kernel, buffers, slab" is total minus free minus page cache minus process memory. Lighthouse is its resident set, which includes a small amount of file cache.</p>
 
 <h2>2. How much RAM a PIR server can use</h2>
 <div class="scroll"><table>
 <tr><th>PIR server RAM</th><th>Node at head?</th><th>Evidence</th><th>Confidence</th><th class="n">PIR DB at 4x</th><th class="n">PIR DB at 1.6x</th></tr>
 <tr><td>up to 16 GB</td><td>yes</td><td>passed in A and B, and 14–14.5 GB also in C</td><td class="conf-h">High</td><td class="n">4.0 GB</td><td class="n">10.0 GB</td></tr>
-<tr><td>18 GB</td><td>yes</td><td>passed in A and B, about 0.7–1.2 GB of RAM left</td><td class="conf-h">High</td><td class="n">4.5 GB</td><td class="n">11.2 GB</td></tr>
-<tr><td>18.5 GB</td><td>yes</td><td>passed once (B), 0.64 GB of RAM left</td><td class="conf-m">Medium</td><td class="n">4.6 GB</td><td class="n">11.6 GB</td></tr>
-<tr><td>19 GB and more</td><td>not tested</td><td>stopped by the safety margin: the next step did not fit in free RAM</td><td class="conf-l">Unknown, likely OOM</td><td class="n"></td><td class="n"></td></tr>
+<tr><td>18 GB</td><td>yes</td><td>passed in A and B with no kills, 0.7–1.2 GB of RAM left</td><td class="conf-h">High</td><td class="n">4.5 GB</td><td class="n">11.2 GB</td></tr>
+<tr><td>18.5 GB</td><td>no: out of memory</td><td>run B: the kernel killed the PIR process 5 times in 35 min. The node stayed at head</td><td class="conf-h">High</td><td class="n"></td><td class="n"></td></tr>
 </table></div>
 <p class="note">A pass means the median lag over the last 15 minutes of a 30–35 minute hold was at most 24 s (2 slots). We suggest 16 GB as the planning number. The two days after a restart showed why: Reth's heap grew from 2 GB to 5 GB, and free RAM at idle fell from 21.9 GB to about 16.5 GB.</p>
 
 <h2>3. PIR RAM vs falling behind, over time</h2>
-<p>The panels share the time axis. The top panel shows the RAM held by the dummy PIR server. The middle panel shows how many blocks the node was behind head: <code>(now - head block timestamp) / 12 s</code>. The bottom panel shows what the squeeze costs, as Reth reads from disk the pages that no longer fit in RAM. Hover to read values. Times are UTC (local time is UTC-6).</p>
+<p>The panels share the time axis. The top panel shows the RAM held by the dummy PIR server. The middle panel shows how many blocks the node was behind head: <code>(now - head block timestamp) / 12 s</code>. The bottom panel shows what the squeeze costs, as Reth reads from disk the pages that no longer fit in RAM. Red marks are kernel OOM kills of the PIR process. Hover to read values. Times are UTC (local time is UTC-6).</p>
 <div class="tabs" id="tabs"></div>
 <div class="chart" id="ts"></div>
 <div class="tip" id="ts-tip"></div>
 <p class="note" id="ts-note"></p>
 
 <h2>4. What the squeeze costs</h2>
-<p>The node stays at head, but the PIR memory moves Reth's database from RAM to disk. These are the costs that grow with PIR RAM. This test ran on a fast NVMe SSD. On a slower disk, the same reads could make the node fall behind.</p>
+<p>The node stays at head, but the PIR memory moves Reth's database from RAM to disk. These costs grow with PIR RAM. This test ran on a fast NVMe SSD. On a slower disk, the same reads could make the node fall behind.</p>
 <div class="two">
   <div><div class="chart" id="c-mdbx"></div><div class="tip" id="c-mdbx-tip"></div></div>
   <div><div class="chart" id="c-disk"></div><div class="tip" id="c-disk-tip"></div></div>
@@ -146,10 +145,11 @@ details summary{cursor:pointer;color:var(--ink-2);font-size:14px;margin:8px 0}
 <h2>6. Confidence levels</h2>
 <div class="scroll"><table>
 <tr><th>Claim</th><th>Confidence</th><th>Why</th></tr>
-<tr><td>The clients need about <span data-k="need"></span> GB that cannot be freed</td><td class="conf-h">High</td><td>Two days of 15 s samples, steady once Reth was warm</td></tr>
+<tr><td>The clients and kernel need about <span data-k="need"></span> GB</td><td class="conf-h">High</td><td>Measured at the 18 GB step. Reth and Lighthouse memory barely changed between no PIR and 18 GB</td></tr>
 <tr><td>A PIR server can hold 18 GB and the node stays at head</td><td class="conf-h">High</td><td>Passed in two separate runs, 30–35 min holds, lag unchanged</td></tr>
-<tr><td>18.5 GB is the edge</td><td class="conf-m">Medium</td><td>Passed once. 0.64 GB of headroom. Reth's heap grows over days</td></tr>
-<tr><td>RAM pressure up to 18.5 GB does not cause lag</td><td class="conf-h">High</td><td>No sample more than 60 s behind during any step of A or B. Import p95 stayed under 360 ms</td></tr>
+<tr><td>The edge is between 18 and 18.5 GB</td><td class="conf-h">High</td><td>18 GB held in two runs with no kills. At 18.5 GB the PIR process was killed every 6 minutes</td></tr>
+<tr><td>18 GB stays safe over days</td><td class="conf-m">Medium</td><td>Only 0.7–1.2 GB of headroom. Reth's heap grows over days</td></tr>
+<tr><td>RAM pressure up to 18 GB does not cause lag</td><td class="conf-h">High</td><td>No sample more than 60 s behind during any step of A or B. Import p95 stayed under 350 ms</td></tr>
 <tr><td>Lag episodes come from Lighthouse or the network</td><td class="conf-m">Medium-high</td><td>Import stayed fast, the stalls happened at 0 GB too, and Reth logged missing consensus updates. Root cause not isolated</td></tr>
 <tr><td>The result holds with a real PIR server</td><td class="conf-l">Low</td><td>The dummy uses no CPU or memory bandwidth. A real server scans its DB for each query</td></tr>
 <tr><td>The result holds over weeks</td><td class="conf-l">Low</td><td>Each hold was 35 min. Chain state and Reth's heap both grow over time</td></tr>
@@ -160,7 +160,7 @@ details summary{cursor:pointer;color:var(--ink-2);font-size:14px;margin:8px 0}
 <li><b>Dummy PIR server.</b> It holds RAM and does nothing else: no CPU, no memory bandwidth, no disk. A CPU PIR server reads its whole DB for each query, so it competes with Reth for CPU and memory bandwidth. That part is not measured. No CPU build of the PIR scheme we target exists yet, so a dummy stands in.</li>
 <li><b>DB size from blowup factors.</b> The 4x figure is a rule of thumb, and 1.6x is InsPIRe GPU's resident footprint. A different scheme needs its own memory profile.</li>
 <li><b><code>--minimal</code> Reth node.</b> A full EIP-7870 node does not fit on the 1.2 TB disk (about 1.3 TB even pruned). The minimal node has the same state and heap, but a smaller DB on disk. A full node's page cache would want more RAM, so it would feel the squeeze sooner.</li>
-<li><b>Fast disk.</b> The disk is an NVMe SSD (990 PRO) behind Proxmox, with 0.11–0.15 ms read latency. We did not check whether the host caches the disk; the latency suggests it does not. On a SATA SSD or an HDD, 750 extra reads per second could make the node fall behind.</li>
+<li><b>Fast disk.</b> The disk is an NVMe SSD (990 PRO) behind Proxmox, with 0.11–0.15 ms read latency. We did not check whether the host caches the disk; the latency suggests it does not. At 18 GB Reth made about 700 disk reads per second, against about 150 with no PIR. On a SATA SSD or an HDD, that could make the node fall behind.</li>
 <li><b>Lighthouse backfill.</b> Lighthouse was downloading historical blocks for the whole test (checkpoint sync), which added some disk and network load.</li>
 <li><b>Swap in run A.</b> A DAppNode timer turned swap back on during A steps 6–10 GB, so those steps are excluded. After that, a guard kept swap off.</li>
 <li><b>Baseline drift.</b> Reth's heap grew from 2 GB to 5 GB in the first day after a restart. Run B (two days of uptime) has the cleanest numbers.</li>
@@ -197,12 +197,12 @@ details summary{cursor:pointer;color:var(--ink-2);font-size:14px;margin:8px 0}
 <tr><td>B</td><td>2026-10-25 04:15</td><td>14 to 18.5 GB, every 0.5 GB (ramp to 12 GB first)</td><td>35 min</td></tr>
 <tr><td>C</td><td>2026-10-26 04:15</td><td>repeat of B, then up to 24 GB with a 0.1 GB margin</td><td>35 min</td></tr>
 </table></div>
-<p><b>Rules.</b> Pass: the median lag over the last 15 minutes of the step is 24 s or less. Fail: above 24 s, or more than 120 s behind for 5 minutes in a row. Network: a failed step where Reth's import p95 stayed under 4 s is marked "net" and repeated once. Ceiling: the run stops when free RAM minus the next increase falls below the margin (0.5 GB in A and B, 0.1 GB in C). Recovery: after release, the time until lag stays at 24 s or less for 5 minutes.</p>
+<p><b>Rules.</b> Pass: the median lag over the last 15 minutes of the step is 24 s or less. Fail: above 24 s, or more than 120 s behind for 5 minutes in a row. Network: a failed step where Reth's import p95 stayed under 4 s is marked "net" and repeated once. Ceiling: the run stops when free RAM minus the next increase falls below the margin (0.5 GB in A and B, 0.1 GB in C). OOM: a restart of the PIR process fails the step (added after the test, see the appendix). Recovery: after release, the time until lag stays at 24 s or less for 5 minutes.</p>
 <p><b>To test a real PIR server:</b> replace <code>pir-holder</code> with the server process, loaded with a DB sized for each step, and send it a steady query load. That measures the CPU and memory-bandwidth contention this test left out.</p>
 
 <h2>Appendix: every step</h2>
 <div class="scroll"><table id="steps"></table></div>
-<p class="note">Outcome "net": the step failed on lag while Reth kept importing fast, so it was repeated once. Run C's repeat at 15 GB also failed, during the same Lighthouse stall that went on after release.</p>
+<p class="note">Outcome "net": the step failed on lag while Reth kept importing fast, so it was repeated once. Run C's repeat at 15 GB also failed, during the same Lighthouse stall that went on after release. Outcome "oom": the kernel killed the PIR process during the step (from the kernel log). The orchestrator logged B 18.5 GB as a pass, because systemd restarted the process and it refilled in about 20 s; the harness now fails a step on any restart.</p>
 </main>
 
 <script>
@@ -214,9 +214,10 @@ const f=(v,d=1)=>v==null?"":(+v).toFixed(d);
 
 // ---- headline numbers
 const P=Object.fromEntries(D.bd.idle.parts), Q=Object.fromEntries(D.bd.full.parts);
-const need=P["Reth process (heap)"]+P["Lighthouse process"]+P["Other processes"]+P["Kernel, buffers, slab"];
-const K={need:f(need),reth:f(P["Reth process (heap)"]),lh:f(P["Lighthouse process"]),
-  kern:f(P["Kernel, buffers, slab"]+P["Other processes"]),cache:f(P["Page cache (mostly Reth DB)"]),idle_n:D.bd.idle_n};
+const need=Q["Reth process (heap)"]+Q["Lighthouse process"]+Q["Other processes"]+Q["Kernel, buffers, slab"];
+const K={need:f(need),reth:f(Q["Reth process (heap)"]),lh:f(Q["Lighthouse process"]),
+  kern:f(Q["Kernel, buffers, slab"]+Q["Other processes"]),cache:f(P["Page cache (mostly Reth DB)"]),idle_n:D.bd.idle_n,
+  cache_d:f(P["Page cache (mostly Reth DB)"]-Q["Page cache (mostly Reth DB)"]),kern_d:f(P["Kernel, buffers, slab"]-Q["Kernel, buffers, slab"])};
 document.querySelectorAll("[data-k]").forEach(s=>s.textContent=K[s.dataset.k]);
 document.getElementById("span").textContent=`${D.span[0].replace("T"," ").slice(0,16)} to ${D.span[1].replace("T"," ").slice(0,16)} UTC, ${D.span[2].toLocaleString()} samples`;
 
@@ -228,8 +229,8 @@ const COLS={"Reth process (heap)":"--s-reth","Lighthouse process":"--s-lh","Othe
  "Kernel, buffers, slab":"--s-kernel","Dummy PIR server":"--s-pir","Page cache (mostly Reth DB)":"--s-cache","Free":"--s-free"};
 function drawBD(){
   const box=document.getElementById("bd");box.innerHTML="";
-  const W=900,L=110,R=10,bh=38,rows=[["No PIR",D.bd.idle],["PIR 18.5 GB",D.bd.full]];
-  const H=rows.length*(bh+22)+30, svg=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Stacked bars of RAM use, without PIR and with 18.5 GB PIR"},box);
+  const W=900,L=110,R=10,bh=38,rows=[["No PIR",D.bd.idle],["PIR 18 GB",D.bd.full]];
+  const H=rows.length*(bh+22)+30, svg=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Stacked bars of RAM use, without PIR and with 18 GB PIR"},box);
   const x=v=>L+v/32*(W-L-R), t=tip("bd-tip");
   for(let g=0;g<=32;g+=4){el("line",{x1:x(g),x2:x(g),y1:4,y2:H-22,class:"gridl"},svg);
     const tx=el("text",{x:x(g),y:H-6,"text-anchor":"middle",class:"lbl"},svg);tx.textContent=g+(g==32?" GB":"")}
@@ -243,14 +244,14 @@ function drawBD(){
   });
   document.getElementById("bd-legend").innerHTML=Object.keys(COLS).map(k=>`<span><i style="background:${css(COLS[k])}"></i>${k}</span>`).join("");
 }
-document.getElementById("bd-table").innerHTML="<tr><th>Component</th><th class=n>No PIR (GB)</th><th class=n>PIR 18.5 GB (GB)</th></tr>"+
+document.getElementById("bd-table").innerHTML="<tr><th>Component</th><th class=n>No PIR (GB)</th><th class=n>PIR 18 GB (GB)</th></tr>"+
   D.bd.idle.parts.map(([k,v],i)=>`<tr><td>${k}</td><td class=n>${f(v,2)}</td><td class=n>${f(D.bd.full.parts[i][1],2)}</td></tr>`).join("")+
   `<tr><td>MemAvailable</td><td class=n>${f(D.bd.idle.avail,2)}</td><td class=n>${f(D.bd.full.avail,2)}</td></tr>`+
   `<tr><td>Reth DB pages in RAM</td><td class=n>${f(D.bd.idle.mdbx,2)}</td><td class=n>${f(D.bd.full.mdbx,2)}</td></tr>`;
 
 // ---- 3. time series
 const NOTES={A:"Run A: 2 GB steps. Steps 6, 8 and 10 GB had swap on (excluded). The run stopped before 20 GB because the step would not fit in free RAM. The node was never more than 2 blocks behind.",
- B:"Run B: ramp to 12 GB, then 0.5 GB steps from 14 to 18.5 GB. The node stayed under 2 blocks behind the whole time, while disk reads rose as the page cache shrank. The run stopped before 19 GB (0.64 GB free).",
+ B:"Run B: ramp to 12 GB, then 0.5 GB steps from 14 to 18.5 GB. The node stayed under 2 blocks behind the whole time, while disk reads rose as the page cache shrank. At 18.5 GB the kernel killed the PIR process 5 times (red marks), and systemd restarted it each time. The node stayed at head.",
  C:"Run C: 14 and 14.5 GB passed. At 15 GB Lighthouse stalled. The lag grows in straight lines (1 s per second, no new blocks arrive), then drops when blocks arrive. The step was repeated and failed again. The stall went on after release at 0 GB, so it was not caused by RAM."};
 let RUN="B";
 const sec=s=>{const[h,m,x]=s.split(":").map(Number);return h*3600+m*60+x};
@@ -258,7 +259,7 @@ const hhmm=v=>{v=((v%86400)+86400)%86400;return String(Math.floor(v/3600)).padSt
 function rollmed(a,k){return a.map((_,i)=>{const w=a.slice(Math.max(0,i-k+1),i+1).filter(v=>v!=null).sort((p,q)=>p-q);return w.length?w[w.length>>1]:null})}
 function drawTS(){
   const box=document.getElementById("ts");box.innerHTML="";
-  const rows=D.series[RUN];if(!rows.length)return;
+  const rows=D.series[RUN].rows;if(!rows.length)return;
   const t0=sec(rows[0][0]);const X=rows.map(r=>{let s=sec(r[0])-t0;return s<0?s+86400:s});
   const held=rows.map(r=>r[1]),beh=rollmed(rows.map(r=>r[2]),4),disk=rollmed(rows.map(r=>r[3]),8);
   const W=900,L=56,R=16,top=8,gap=34;
@@ -284,8 +285,12 @@ function drawTS(){
   });
   // stair labels: ramp top, first and last step
   const P0=panels[0];const lv=[];held.forEach((v,i)=>{if(i&&v!==held[i-1]&&v>0)lv.push([i,v])});
-  const keep=lv.filter(([i,v],k)=>k==lv.length-1||v>=14&&lv[k-1]&&lv[k-1][1]<14||(lv[k+1]&&lv[k+1][1]>=14&&v<14));
+  const mx=Math.max(...held),first=lv.find(([i,v])=>v>=14)||lv[0],topI=lv.find(([i,v])=>v==mx);
+  const keep=[first,topI].filter((p,k,a)=>p&&a.indexOf(p)==k);
   keep.forEach(([i,v])=>{const tx=el("text",{x:x(X[i])+3,y:P0.y(v)-6,class:"lbl"},svg);tx.textContent=v+" GB"});
+  // kernel OOM kills of the PIR process
+  const day=D.series[RUN].day;D.kills.forEach((k,j)=>{if(D.kill_days[j]!==day)return;let s=sec(k)-t0;if(s<0||s>xm)return;
+    const cx=x(s),cy=P0.y(0)-2;el("path",{d:`M${cx-5},${cy-5}L${cx+5},${cy+5}M${cx-5},${cy+5}L${cx+5},${cy-5}`,stroke:css("--bad"),"stroke-width":2.5},svg)});
   // release marker
   const rel=held.findIndex((v,i)=>i&&v==0&&held[i-1]>0);
   if(rel>0){el("line",{x1:x(X[rel]),x2:x(X[rel]),y1:top+10,y2:H-34,stroke:css("--ink-3"),"stroke-dasharray":"2 4"},svg);
