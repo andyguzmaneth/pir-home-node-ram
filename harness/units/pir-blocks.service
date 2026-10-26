@@ -1,0 +1,10 @@
+[Unit]
+Description=PIR RAM test: per-block import/arrival log from the journal
+After=reth.service lighthouse.service
+[Service]
+ExecStart=/usr/bin/python3 /home/andy/pir-ram/blocks.py
+Restart=always
+RestartSec=10
+Nice=-5
+[Install]
+WantedBy=multi-user.target

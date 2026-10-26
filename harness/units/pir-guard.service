@@ -1,0 +1,5 @@
+[Unit]
+Description=PIR RAM test: keep swap off and DAppNode core stopped until restore
+[Service]
+Type=oneshot
+ExecStart=/bin/sh /home/andy/pir-ram/guard.sh

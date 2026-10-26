@@ -1,0 +1,9 @@
+[Unit]
+Description=PIR RAM test: dummy PIR process holding state/target_gb of RAM
+[Service]
+ExecStart=/usr/bin/python3 /home/andy/pir-ram/holder.py
+Restart=always
+RestartSec=10
+OOMScoreAdjust=1000
+[Install]
+WantedBy=multi-user.target

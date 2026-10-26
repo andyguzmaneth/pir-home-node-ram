@@ -1,0 +1,74 @@
+2026-10-23T23:40:23Z start; done=[] current=None
+2026-10-24T04:15:01Z run A: precheck, waiting for head
+2026-10-24T04:20:01Z run A: at head after 5.0 min
+2026-10-24T04:20:01Z run A: steps [2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24] GB, 30 min each, deadline 2026-10-24T12:45:00Z
+2026-10-24T04:20:01Z run A: step 2 GB start (MemAvailable 17.32)
+2026-10-24T04:50:01Z run A: step 2 GB -> pass (tail median lag 8.0 s, max 14 s, min MemAvailable 14.89 GB)
+2026-10-24T04:50:01Z run A: step 4 GB start (MemAvailable 15.21)
+2026-10-24T05:20:02Z run A: step 4 GB -> pass (tail median lag 9.0 s, max 15 s, min MemAvailable 13.24 GB)
+2026-10-24T05:20:02Z run A: step 6 GB start (MemAvailable 13.48)
+2026-10-24T05:50:03Z run A: step 6 GB -> pass (tail median lag 8.5 s, max 13 s, min MemAvailable 11.04 GB)
+2026-10-24T05:50:03Z run A: step 8 GB start (MemAvailable 11.77)
+2026-10-24T06:20:04Z run A: step 8 GB -> pass (tail median lag 7.5 s, max 14 s, min MemAvailable 9.56 GB)
+2026-10-24T06:20:04Z run A: step 10 GB start (MemAvailable 10.50)
+2026-10-24T06:50:05Z run A: step 10 GB -> pass (tail median lag 8.0 s, max 14 s, min MemAvailable 7.38 GB)
+2026-10-24T06:50:05Z run A: step 12 GB start (MemAvailable 7.54)
+2026-10-24T07:20:06Z run A: step 12 GB -> pass (tail median lag 8.0 s, max 24 s, min MemAvailable 6.28 GB)
+2026-10-24T07:20:06Z run A: step 14 GB start (MemAvailable 6.92)
+2026-10-24T07:50:08Z run A: step 14 GB -> pass (tail median lag 8.0 s, max 15 s, min MemAvailable 4.6 GB)
+2026-10-24T07:50:08Z run A: step 16 GB start (MemAvailable 4.80)
+2026-10-24T08:20:10Z run A: step 16 GB -> pass (tail median lag 7.0 s, max 15 s, min MemAvailable 3.19 GB)
+2026-10-24T08:20:10Z run A: step 18 GB start (MemAvailable 3.65)
+2026-10-24T08:50:11Z run A: step 18 GB -> pass (tail median lag 9.0 s, max 15 s, min MemAvailable 1.24 GB)
+2026-10-24T08:50:11Z run A: ceiling before 20 GB (MemAvailable 1.67)
+2026-10-24T08:55:11Z run A: released; back at head after 5.0 min
+2026-10-24T10:47:15Z start; done=['A'] current=None
+2026-10-25T04:15:01Z run B: precheck, waiting for head
+2026-10-25T04:20:01Z run B: at head after 5.0 min
+2026-10-25T04:20:01Z run B: steps [16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0, 20.5, 21.0, 21.5, 22.0, 22.5, 23.0, 23.5, 24.0] GB, 40 min each, deadline 2026-10-25T12:45:00Z
+2026-10-25T04:20:01Z run B: ceiling before 16.0 GB (MemAvailable 16.18)
+2026-10-25T04:25:01Z run B: released; back at head after 5.0 min
+2026-10-25T04:47:27Z start; done=['A', 'B'] current=None
+2026-10-25T04:47:40Z start; done=['A'] current=None
+2026-10-25T04:47:40Z run B: precheck, waiting for head
+2026-10-25T04:52:40Z run B: at head after 5.0 min
+2026-10-25T04:52:40Z run B: steps [14.0, 14.5, 15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0, 20.5, 21.0, 21.5, 22.0, 22.5, 23.0, 23.5, 24.0] GB, 35 min each, deadline 2026-10-25T12:45:00Z
+2026-10-25T05:04:40Z run B: ramped to 12 GB (MemAvailable 6.33)
+2026-10-25T05:04:40Z run B: step 14.0 GB start (MemAvailable 6.33)
+2026-10-25T05:39:42Z run B: step 14.0 GB -> pass (tail median lag 7.0 s, max 15 s, min MemAvailable 4.18 GB)
+2026-10-25T05:39:42Z run B: step 14.5 GB start (MemAvailable 4.31)
+2026-10-25T06:14:44Z run B: step 14.5 GB -> pass (tail median lag 9.0 s, max 15 s, min MemAvailable 3.62 GB)
+2026-10-25T06:14:44Z run B: step 15.0 GB start (MemAvailable 4.18)
+2026-10-25T06:49:46Z run B: step 15.0 GB -> pass (tail median lag 8.0 s, max 14 s, min MemAvailable 3.46 GB)
+2026-10-25T06:49:46Z run B: step 15.5 GB start (MemAvailable 3.79)
+2026-10-25T07:24:48Z run B: step 15.5 GB -> pass (tail median lag 8.0 s, max 15 s, min MemAvailable 3.23 GB)
+2026-10-25T07:24:48Z run B: step 16.0 GB start (MemAvailable 3.38)
+2026-10-25T07:59:50Z run B: step 16.0 GB -> pass (tail median lag 8.0 s, max 20 s, min MemAvailable 2.82 GB)
+2026-10-25T07:59:50Z run B: step 16.5 GB start (MemAvailable 3.04)
+2026-10-25T08:34:52Z run B: step 16.5 GB -> pass (tail median lag 7.5 s, max 15 s, min MemAvailable 2.44 GB)
+2026-10-25T08:34:52Z run B: step 17.0 GB start (MemAvailable 2.66)
+2026-10-25T09:09:54Z run B: step 17.0 GB -> pass (tail median lag 8.0 s, max 15 s, min MemAvailable 1.59 GB)
+2026-10-25T09:09:54Z run B: step 17.5 GB start (MemAvailable 2.15)
+2026-10-25T09:44:56Z run B: step 17.5 GB -> pass (tail median lag 8.0 s, max 15 s, min MemAvailable 1.4 GB)
+2026-10-25T09:44:56Z run B: step 18.0 GB start (MemAvailable 1.61)
+2026-10-25T10:19:58Z run B: step 18.0 GB -> pass (tail median lag 8.0 s, max 15 s, min MemAvailable 0.7 GB)
+2026-10-25T10:19:58Z run B: step 18.5 GB start (MemAvailable 1.28)
+2026-10-25T10:55:00Z run B: step 18.5 GB -> pass (tail median lag 7.0 s, max 15 s, min MemAvailable 0.64 GB)
+2026-10-25T10:55:00Z run B: ceiling before 19.0 GB (MemAvailable 0.64)
+2026-10-25T11:00:00Z run B: released; back at head after 5.0 min
+2026-10-25T12:47:28Z start; done=['A', 'B'] current=None
+2026-10-26T04:02:11Z start; done=['A', 'B'] current=None
+2026-10-26T04:15:01Z run C: precheck, waiting for head
+2026-10-26T04:20:01Z run C: at head after 5.0 min
+2026-10-26T04:20:01Z run C: steps [14.0, 14.5, 15.0, 15.5, 16.0, 16.5, 17.0, 17.5, 18.0, 18.5, 19.0, 19.5, 20.0, 20.5, 21.0, 21.5, 22.0, 22.5, 23.0, 23.5, 24.0] GB, 35 min each, deadline 2026-10-26T12:45:00Z
+2026-10-26T04:32:01Z run C: ramped to 12 GB (MemAvailable 6.43)
+2026-10-26T04:32:01Z run C: step 14.0 GB start (MemAvailable 6.43)
+2026-10-26T05:07:02Z run C: step 14.0 GB -> pass (tail median lag 9.0 s, max 20 s, min MemAvailable 4.49 GB)
+2026-10-26T05:07:02Z run C: step 14.5 GB start (MemAvailable 4.68)
+2026-10-26T05:42:04Z run C: step 14.5 GB -> pass (tail median lag 8.0 s, max 88 s, min MemAvailable 3.83 GB)
+2026-10-26T05:42:04Z run C: step 15.0 GB start (MemAvailable 4.09)
+2026-10-26T06:17:06Z run C: step 15.0 GB lagged but import p95 71 ms -> 'net', repeating once
+2026-10-26T06:49:23Z run C: step 15.0 GB -> fail (tail median lag 11.5 s, max 592 s, min MemAvailable 2.91 GB)
+2026-10-26T07:10:38Z run C: released; back at head after 21.3 min
+2026-10-26T07:10:42Z restore: swap on, DAppNode containers started, recreate-dappnode.timer re-enabled, guard off
+2026-10-26T07:10:42Z all runs done; report written to data/report.md

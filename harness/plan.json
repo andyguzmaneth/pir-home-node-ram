@@ -1,0 +1,43 @@
+{
+ "runs": [
+  {
+   "id": "A",
+   "mode": "coarse",
+   "start": "2026-10-24T04:15:00Z",
+   "deadline": "2026-10-24T12:45:00Z",
+   "params": {
+    "start_gb": 2,
+    "step_gb": 2,
+    "max_gb": 24,
+    "hold_min": 30
+   }
+  },
+  {
+   "id": "B",
+   "mode": "fine",
+   "ref": "A",
+   "start": "2026-10-25T04:15:00Z",
+   "deadline": "2026-10-25T12:45:00Z",
+   "params": {
+    "step_gb": 0.5,
+    "below_gb": 4,
+    "max_gb": 24,
+    "hold_min": 35
+   }
+  },
+  {
+   "id": "C",
+   "mode": "replicate",
+   "ref": "B",
+   "start": "2026-10-26T04:15:00Z",
+   "deadline": "2026-10-26T12:45:00Z",
+   "params": {
+    "step_gb": 0.5,
+    "below_gb": 4,
+    "max_gb": 24,
+    "hold_min": 35,
+    "margin_gb": 0.1
+   }
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+[Unit]
+Description=PIR RAM test: sample node/OS/network state every 15 s
+After=network-online.target reth.service lighthouse.service
+[Service]
+ExecStart=/usr/bin/python3 /home/andy/pir-ram/collect.py
+Restart=always
+RestartSec=10
+Nice=-5
+[Install]
+WantedBy=multi-user.target

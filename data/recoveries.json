@@ -1,0 +1,20 @@
+[
+ {
+  "run": "A",
+  "released": "2026-10-24T08:55:11Z",
+  "back_at_head_min": 5.0,
+  "note": "minutes until lag <= 24 s held for 5 min (includes those 5 min)"
+ },
+ {
+  "run": "B",
+  "released": "2026-10-25T11:00:00Z",
+  "back_at_head_min": 5.0,
+  "note": "minutes until lag <= 24 s held for 5 min (includes those 5 min)"
+ },
+ {
+  "run": "C",
+  "released": "2026-10-26T07:10:38Z",
+  "back_at_head_min": 21.3,
+  "note": "minutes until lag <= 24 s held for 5 min (includes those 5 min)"
+ }
+]

@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PIR Home-Node RAM</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#fcfcfb; --surface:#f4f3f0; --ink:#0b0b0b; --ink-2:#52514e; --ink-3:#8a8984;
+  --rule:#e3e2dd; --grid:#ecebe7;
+  --s-reth:#2a78d6; --s-lh:#eb6834; --s-cache:#1baf7a; --s-pir:#6250d6;
+  --s-other:#a3a29c; --s-kernel:#6f6e69; --s-free:#dddcd6;
+  --pass:#008300; --warn:#b26b00; --bad:#c43c3b;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#1a1a19; --surface:#232322; --ink:#f0efec; --ink-2:#c3c2b7; --ink-3:#8f8e86;
+    --rule:#34342f; --grid:#2b2b28;
+    --s-reth:#3987e5; --s-lh:#d95926; --s-cache:#199e70; --s-pir:#9085e9;
+    --s-other:#6f6e69; --s-kernel:#9a998f; --s-free:#3a3a36;
+    --pass:#3fae3f; --warn:#d99a2b; --bad:#e66767;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#1a1a19; --surface:#232322; --ink:#f0efec; --ink-2:#c3c2b7; --ink-3:#8f8e86;
+  --rule:#34342f; --grid:#2b2b28;
+  --s-reth:#3987e5; --s-lh:#d95926; --s-cache:#199e70; --s-pir:#9085e9;
+  --s-other:#6f6e69; --s-kernel:#9a998f; --s-free:#3a3a36;
+  --pass:#3fae3f; --warn:#d99a2b; --bad:#e66767;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:980px;margin:0 auto;padding:40px 16px 80px}
+h1{font-size:30px;line-height:1.2;margin:0 0 6px;letter-spacing:-.01em}
+h2{font-size:21px;margin:48px 0 10px;padding-top:16px;border-top:1px solid var(--rule)}
+h3{font-size:16px;margin:24px 0 6px}
+p,li{color:var(--ink)}
+.sub{color:var(--ink-2);margin:0 0 24px}
+.muted{color:var(--ink-2)}
+.small{font-size:13px;color:var(--ink-2)}
+.tldr{background:var(--surface);border-radius:10px;padding:18px 22px;margin:20px 0 8px}
+.tldr h2{border:0;margin:0 0 8px;padding:0;font-size:17px}
+.tldr ul{margin:0;padding-left:20px}
+.tldr li{margin:4px 0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:22px 0}
+.kpi{padding:12px 0;border-top:2px solid var(--ink)}
+.kpi .v{font-size:28px;font-weight:650;font-variant-numeric:tabular-nums}
+.kpi .l{font-size:13px;color:var(--ink-2)}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;color:var(--ink-2);font-size:13px}
+td.n,th.n{text-align:right}
+.scroll{overflow-x:auto}
+.chart{width:100%;margin:8px 0 4px;position:relative}
+.chart svg{width:100%;height:auto;display:block;overflow:visible}
+.axis text,.lbl{fill:var(--ink-2);font-size:12px}
+.axis line,.axis path{stroke:var(--rule)}
+.gridl{stroke:var(--grid)}
+.ttl{fill:var(--ink);font-size:13px;font-weight:600}
+.tip{position:absolute;pointer-events:none;background:var(--bg);border:1px solid var(--rule);border-radius:6px;padding:6px 9px;font-size:13px;line-height:1.4;box-shadow:0 2px 8px rgba(0,0,0,.12);display:none;white-space:nowrap;z-index:2}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--ink-2);margin:6px 0}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.tabs{display:flex;gap:6px;margin:12px 0 4px;flex-wrap:wrap}
+.tabs button{font:inherit;font-size:14px;padding:5px 12px;border-radius:6px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);cursor:pointer}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.note{font-size:14px;color:var(--ink-2);margin:6px 0 0}
+.conf-h{color:var(--pass);font-weight:600}.conf-m{color:var(--warn);font-weight:600}.conf-l{color:var(--bad);font-weight:600}
+a{color:var(--s-reth)}
+code{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:var(--surface);padding:1px 5px;border-radius:4px}
+pre{background:var(--surface);padding:12px 14px;border-radius:8px;overflow-x:auto;font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+details summary{cursor:pointer;color:var(--ink-2);font-size:14px;margin:8px 0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media (max-width:700px){.two{grid-template-columns:1fr}h1{font-size:25px}}
+</style>
+</head>
+<body>
+<main>
+<h1>How much RAM does a 32 GB home node leave for a PIR server?</h1>
+<p class="sub">Squeeze test on a Reth + Lighthouse mainnet node, 2026-10-24 to 2026-10-26. Andy Guzman, CROPS Reads (Ethereum Foundation). Data span: <span id="span"></span>.</p>
+
+<section class="tldr">
+<h2>TL;DR</h2>
+<ul>
+<li><b>The clients need about <span data-k="need"></span> GB that cannot be freed</b> (Reth heap <span data-k="reth"></span>, Lighthouse <span data-k="lh"></span>, kernel and other <span data-k="kern"></span>). Most of the other <span data-k="cache"></span> GB is page cache that holds Reth's database. The cache is useful, but the node gives it up.</li>
+<li><b>A PIR server can hold 18 GB and the node stays at head</b> (high confidence: passed in two runs). 18.5 GB passed once, with 0.6 GB of headroom left. We did not go past 19 GB, because the next step could have made the kernel kill Reth.</li>
+<li><b>PIR database size that fits:</b> about 4.5 GB with a 4x RAM rule of thumb, or about 11.5 GB with InsPIRe GPU's 1.6x. For planning, we suggest a budget of 16 GB of RAM (4 GB DB at 4x, 10 GB at 1.6x). This leaves room for Reth's heap to grow and for the PIR server's own working memory.</li>
+<li><b>RAM never made the node fall behind.</b> As the PIR server took RAM, Reth read more from disk (0.8 to 4.3 MB/s). Block import stayed under 360 ms (95th percentile), and lag stayed at about 8 s (under 1 block).</li>
+<li><b>When the node fell behind, the cause was Lighthouse, not RAM.</b> Lighthouse sometimes stopped sending new blocks to Reth for up to 13 minutes. This also happened with no PIR memory held, and it ended run C at 15 GB.</li>
+</ul>
+</section>
+
+<div class="kpis">
+  <div class="kpi"><div class="v">31.4 GB</div><div class="l">RAM the OS sees (32 GiB VM)</div></div>
+  <div class="kpi"><div class="v"><span data-k="need"></span> GB</div><div class="l">Clients + kernel, not reclaimable</div></div>
+  <div class="kpi"><div class="v">18–18.5 GB</div><div class="l">Held by dummy PIR, node at head</div></div>
+  <div class="kpi"><div class="v">4.6 / 11.5 GB</div><div class="l">PIR DB at 4x / 1.6x blowup</div></div>
+</div>
+
+<h2>1. Where the 32 GB goes</h2>
+<p>Each bar is one state of the machine. In the top bar the node runs with no PIR server. The bottom bar is the end of the 18.5 GB step. The PIR memory came almost entirely out of the page cache, and the client processes kept their memory.</p>
+<div class="legend" id="bd-legend"></div>
+<div class="chart" id="bd"></div>
+<div class="tip" id="bd-tip"></div>
+<div class="scroll"><table id="bd-table"></table></div>
+<p class="note">Values are medians. "No PIR" uses <span data-k="idle_n"></span> samples (15 s apart) from a quiet period between runs B and C, when Reth was fully warm. "PIR 18.5 GB" uses the last minutes of that step. "Kernel, buffers, slab" is total minus free minus page cache minus process memory. Lighthouse is its resident set, which includes a small amount of file cache.</p>
+
+<h2>2. How much RAM a PIR server can use</h2>
+<div class="scroll"><table>
+<tr><th>PIR server RAM</th><th>Node at head?</th><th>Evidence</th><th>Confidence</th><th class="n">PIR DB at 4x</th><th class="n">PIR DB at 1.6x</th></tr>
+<tr><td>up to 16 GB</td><td>yes</td><td>passed in A and B, and 14–14.5 GB also in C</td><td class="conf-h">High</td><td class="n">4.0 GB</td><td class="n">10.0 GB</td></tr>
+<tr><td>18 GB</td><td>yes</td><td>passed in A and B, about 0.7–1.2 GB of RAM left</td><td class="conf-h">High</td><td class="n">4.5 GB</td><td class="n">11.2 GB</td></tr>
+<tr><td>18.5 GB</td><td>yes</td><td>passed once (B), 0.64 GB of RAM left</td><td class="conf-m">Medium</td><td class="n">4.6 GB</td><td class="n">11.6 GB</td></tr>
+<tr><td>19 GB and more</td><td>not tested</td><td>stopped by the safety margin: the next step did not fit in free RAM</td><td class="conf-l">Unknown, likely OOM</td><td class="n"></td><td class="n"></td></tr>
+</table></div>
+<p class="note">A pass means the median lag over the last 15 minutes of a 30–35 minute hold was at most 24 s (2 slots). We suggest 16 GB as the planning number. The two days after a restart showed why: Reth's heap grew from 2 GB to 5 GB, and free RAM at idle fell from 21.9 GB to about 16.5 GB.</p>
+
+<h2>3. PIR RAM vs falling behind, over time</h2>
+<p>The panels share the time axis. The top panel shows the RAM held by the dummy PIR server. The middle panel shows how many blocks the node was behind head: <code>(now - head block timestamp) / 12 s</code>. The bottom panel shows what the squeeze costs, as Reth reads from disk the pages that no longer fit in RAM. Hover to read values. Times are UTC (local time is UTC-6).</p>
+<div class="tabs" id="tabs"></div>
+<div class="chart" id="ts"></div>
+<div class="tip" id="ts-tip"></div>
+<p class="note" id="ts-note"></p>
+
+<h2>4. What the squeeze costs</h2>
+<p>The node stays at head, but the PIR memory moves Reth's database from RAM to disk. These are the costs that grow with PIR RAM. This test ran on a fast NVMe SSD. On a slower disk, the same reads could make the node fall behind.</p>
+<div class="two">
+  <div><div class="chart" id="c-mdbx"></div><div class="tip" id="c-mdbx-tip"></div></div>
+  <div><div class="chart" id="c-disk"></div><div class="tip" id="c-disk-tip"></div></div>
+</div>
+<p class="note">Each dot is one clean step from run A or B. A steps 6, 8 and 10 GB are left out: swap was on during those steps, so the node had extra room. Reth DB in RAM is the part of <code>mdbx.dat</code> resident in page cache (fincore, every 5 min).</p>
+
+<h2>5. Falling behind is a Lighthouse/network problem</h2>
+<div class="scroll"><table id="behind"></table></div>
+<ul>
+<li>During every episode more than 60 s behind, Reth imported blocks in 44–360 ms (95th percentile). Reth was not slow. It received no new blocks.</li>
+<li>Reth logged "Beacon client online, but no consensus updates received". Lighthouse's execution hash stopped advancing, and it had only 4–20 peers.</li>
+<li>All episodes were in the local evening or night: a cluster at 19:50–20:25 local with the home bandwidth cap (20/10 Mbit/s) on, and the run C stall at 22:30–01:05 local with the cap off. The longest lasted 13 minutes.</li>
+<li>In run C a stall started at 15 GB and went on after all PIR memory was released: the node was 438 s behind with 0 GB held.</li>
+<li>We did not isolate the root cause (Lighthouse peers, the home network, or the bandwidth cap).</li>
+</ul>
+<p class="note">After release, the node was back at head in 5 min (A, B) and 21 min (C, during the stall). After a reboot the node caught up at about 37 blocks/min, about 7 times real time (one hour of lag in about 9.5 min).</p>
+
+<h2>6. Confidence levels</h2>
+<div class="scroll"><table>
+<tr><th>Claim</th><th>Confidence</th><th>Why</th></tr>
+<tr><td>The clients need about <span data-k="need"></span> GB that cannot be freed</td><td class="conf-h">High</td><td>Two days of 15 s samples, steady once Reth was warm</td></tr>
+<tr><td>A PIR server can hold 18 GB and the node stays at head</td><td class="conf-h">High</td><td>Passed in two separate runs, 30–35 min holds, lag unchanged</td></tr>
+<tr><td>18.5 GB is the edge</td><td class="conf-m">Medium</td><td>Passed once. 0.64 GB of headroom. Reth's heap grows over days</td></tr>
+<tr><td>RAM pressure up to 18.5 GB does not cause lag</td><td class="conf-h">High</td><td>No sample more than 60 s behind during any step of A or B. Import p95 stayed under 360 ms</td></tr>
+<tr><td>Lag episodes come from Lighthouse or the network</td><td class="conf-m">Medium-high</td><td>Import stayed fast, the stalls happened at 0 GB too, and Reth logged missing consensus updates. Root cause not isolated</td></tr>
+<tr><td>The result holds with a real PIR server</td><td class="conf-l">Low</td><td>The dummy uses no CPU or memory bandwidth. A real server scans its DB for each query</td></tr>
+<tr><td>The result holds over weeks</td><td class="conf-l">Low</td><td>Each hold was 35 min. Chain state and Reth's heap both grow over time</td></tr>
+</table></div>
+
+<h2>7. Caveats</h2>
+<ul>
+<li><b>Dummy PIR server.</b> It holds RAM and does nothing else: no CPU, no memory bandwidth, no disk. A CPU PIR server reads its whole DB for each query, so it competes with Reth for CPU and memory bandwidth. That part is not measured. No CPU build of the PIR scheme we target exists yet, so a dummy stands in.</li>
+<li><b>DB size from blowup factors.</b> The 4x figure is a rule of thumb, and 1.6x is InsPIRe GPU's resident footprint. A different scheme needs its own memory profile.</li>
+<li><b><code>--minimal</code> Reth node.</b> A full EIP-7870 node does not fit on the 1.2 TB disk (about 1.3 TB even pruned). The minimal node has the same state and heap, but a smaller DB on disk. A full node's page cache would want more RAM, so it would feel the squeeze sooner.</li>
+<li><b>Fast disk.</b> The disk is an NVMe SSD (990 PRO) behind Proxmox, with 0.11–0.15 ms read latency. We did not check whether the host caches the disk; the latency suggests it does not. On a SATA SSD or an HDD, 750 extra reads per second could make the node fall behind.</li>
+<li><b>Lighthouse backfill.</b> Lighthouse was downloading historical blocks for the whole test (checkpoint sync), which added some disk and network load.</li>
+<li><b>Swap in run A.</b> A DAppNode timer turned swap back on during A steps 6–10 GB, so those steps are excluded. After that, a guard kept swap off.</li>
+<li><b>Baseline drift.</b> Reth's heap grew from 2 GB to 5 GB in the first day after a restart. Run B (two days of uptime) has the cleanest numbers.</li>
+<li><b>One machine, one weekend.</b> One home network with a daytime bandwidth cap of 20/10 Mbit/s. Runs were at night with no cap (04:15–12:45 UTC).</li>
+</ul>
+
+<h2>8. How to reproduce</h2>
+<h3>Machine</h3>
+<ul>
+<li>Proxmox VM: 32 GB RAM (ballooning off), 8 vCPU (Ryzen 9 9900X), 1.2 TB disk, Debian 12.</li>
+<li>Reth v2.8.0 (Docker, <code>reth node --minimal</code>, from a <code>reth download --minimal</code> snapshot). Lighthouse v8.3.0 (native, checkpoint sync).</li>
+</ul>
+<h3>Harness</h3>
+<p>Python scripts (stdlib only) and systemd units, in <a href="https://github.com/andyguzmaneth/pir-home-node-ram/tree/main/harness">harness/</a>. The raw data is in <a href="https://github.com/andyguzmaneth/pir-home-node-ram/tree/main/data">data/</a>.</p>
+<div class="scroll"><table>
+<tr><th>Unit</th><th>What it does</th><th>Output</th></tr>
+<tr><td><code>pir-collect</code></td><td>Every 15 s: RAM (available, page cache, Reth and Lighthouse resident memory, Reth DB pages resident), CPU, disk, network, page faults, pressure stall info, head lag, peers</td><td><code>samples.csv</code></td></tr>
+<tr><td><code>pir-blocks</code></td><td>One row per block from the Reth journal: arrival delay (network/CL) and import time (Reth)</td><td><code>blocks.csv</code>, <code>events.log</code></td></tr>
+<tr><td><code>pir-holder</code></td><td>Dummy PIR server. Holds the target GB as anonymous memory, touched once, in 256 MiB chunks. <code>oom_score_adj=1000</code>, so the kernel kills it before the clients</td><td><code>held_gb</code></td></tr>
+<tr><td><code>pir-orchestrator</code></td><td>Runs the plan: precheck at head, ramp 2 GB every 2 min, then steps, release, recovery timing</td><td><code>results.json</code>, <code>report.md</code></td></tr>
+</table></div>
+<h3>Steps</h3>
+<pre>1. Sync the node to head. Stop every other service. Turn swap off: sudo swapoff -a
+2. Copy the harness to ~/pir-ram and install the units:
+     sudo cp units/*.service /etc/systemd/system/ &amp;&amp; sudo systemctl daemon-reload
+3. Edit plan.json (runs, step sizes, hold minutes, deadline), then:
+     sudo systemctl enable --now pir-collect pir-blocks pir-holder pir-orchestrator
+4. Wait. Each run writes results.json. After the last run the orchestrator turns swap
+   back on, restarts the stopped services and writes report.md.</pre>
+<h3>Plan used</h3>
+<div class="scroll"><table>
+<tr><th>Run</th><th>Date (UTC)</th><th>Steps</th><th>Hold</th></tr>
+<tr><td>A</td><td>2026-10-24 04:15</td><td>2 to 24 GB, every 2 GB</td><td>30 min</td></tr>
+<tr><td>B</td><td>2026-10-25 04:15</td><td>14 to 18.5 GB, every 0.5 GB (ramp to 12 GB first)</td><td>35 min</td></tr>
+<tr><td>C</td><td>2026-10-26 04:15</td><td>repeat of B, then up to 24 GB with a 0.1 GB margin</td><td>35 min</td></tr>
+</table></div>
+<p><b>Rules.</b> Pass: the median lag over the last 15 minutes of the step is 24 s or less. Fail: above 24 s, or more than 120 s behind for 5 minutes in a row. Network: a failed step where Reth's import p95 stayed under 4 s is marked "net" and repeated once. Ceiling: the run stops when free RAM minus the next increase falls below the margin (0.5 GB in A and B, 0.1 GB in C). Recovery: after release, the time until lag stays at 24 s or less for 5 minutes.</p>
+<p><b>To test a real PIR server:</b> replace <code>pir-holder</code> with the server process, loaded with a DB sized for each step, and send it a steady query load. That measures the CPU and memory-bandwidth contention this test left out.</p>
+
+<h2>Appendix: every step</h2>
+<div class="scroll"><table id="steps"></table></div>
+<p class="note">Outcome "net": the step failed on lag while Reth kept importing fast, so it was repeated once. Run C's repeat at 15 GB also failed, during the same Lighthouse stall that went on after release.</p>
+</main>
+
+<script>
+const D=/*DATA*/null;
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NS="http://www.w3.org/2000/svg";
+const el=(t,a={},p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e};
+const f=(v,d=1)=>v==null?"":(+v).toFixed(d);
+
+// ---- headline numbers
+const P=Object.fromEntries(D.bd.idle.parts), Q=Object.fromEntries(D.bd.full.parts);
+const need=P["Reth process (heap)"]+P["Lighthouse process"]+P["Other processes"]+P["Kernel, buffers, slab"];
+const K={need:f(need),reth:f(P["Reth process (heap)"]),lh:f(P["Lighthouse process"]),
+  kern:f(P["Kernel, buffers, slab"]+P["Other processes"]),cache:f(P["Page cache (mostly Reth DB)"]),idle_n:D.bd.idle_n};
+document.querySelectorAll("[data-k]").forEach(s=>s.textContent=K[s.dataset.k]);
+document.getElementById("span").textContent=`${D.span[0].replace("T"," ").slice(0,16)} to ${D.span[1].replace("T"," ").slice(0,16)} UTC, ${D.span[2].toLocaleString()} samples`;
+
+function tip(id){const t=document.getElementById(id);return{show(html,x,y,box){t.innerHTML=html;t.style.display="block";
+  const w=t.offsetWidth,W=box.clientWidth;t.style.left=Math.max(0,Math.min(W-w,x+14))+"px";t.style.top=(y+box.offsetTop+14)+"px"},hide(){t.style.display="none"}}}
+
+// ---- 1. breakdown
+const COLS={"Reth process (heap)":"--s-reth","Lighthouse process":"--s-lh","Other processes":"--s-other",
+ "Kernel, buffers, slab":"--s-kernel","Dummy PIR server":"--s-pir","Page cache (mostly Reth DB)":"--s-cache","Free":"--s-free"};
+function drawBD(){
+  const box=document.getElementById("bd");box.innerHTML="";
+  const W=900,L=110,R=10,bh=38,rows=[["No PIR",D.bd.idle],["PIR 18.5 GB",D.bd.full]];
+  const H=rows.length*(bh+22)+30, svg=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Stacked bars of RAM use, without PIR and with 18.5 GB PIR"},box);
+  const x=v=>L+v/32*(W-L-R), t=tip("bd-tip");
+  for(let g=0;g<=32;g+=4){el("line",{x1:x(g),x2:x(g),y1:4,y2:H-22,class:"gridl"},svg);
+    const tx=el("text",{x:x(g),y:H-6,"text-anchor":"middle",class:"lbl"},svg);tx.textContent=g+(g==32?" GB":"")}
+  rows.forEach(([name,b],i)=>{
+    const y=8+i*(bh+22);const lab=el("text",{x:0,y:y+bh/2+4,class:"ttl"},svg);lab.textContent=name;
+    let acc=0;b.parts.forEach(([k,v])=>{if(!v)return;const w=x(acc+v)-x(acc);
+      const r=el("rect",{x:x(acc)+1,y,width:Math.max(0,w-2),height:bh,rx:3,fill:css(COLS[k])},svg);
+      if(w>44){const tx=el("text",{x:x(acc)+w/2,y:y+bh/2+4,"text-anchor":"middle",style:`font-size:12px;fill:${k=="Free"||k=="Other processes"?css("--ink"):"#fff"}`},svg);tx.textContent=f(v)}
+      r.addEventListener("mousemove",e=>{const bb=box.getBoundingClientRect();t.show(`<b>${name}</b><br>${k}: ${f(v,2)} GB`,e.clientX-bb.left,e.clientY-bb.top,box)});
+      r.addEventListener("mouseleave",t.hide);acc+=v});
+  });
+  document.getElementById("bd-legend").innerHTML=Object.keys(COLS).map(k=>`<span><i style="background:${css(COLS[k])}"></i>${k}</span>`).join("");
+}
+document.getElementById("bd-table").innerHTML="<tr><th>Component</th><th class=n>No PIR (GB)</th><th class=n>PIR 18.5 GB (GB)</th></tr>"+
+  D.bd.idle.parts.map(([k,v],i)=>`<tr><td>${k}</td><td class=n>${f(v,2)}</td><td class=n>${f(D.bd.full.parts[i][1],2)}</td></tr>`).join("")+
+  `<tr><td>MemAvailable</td><td class=n>${f(D.bd.idle.avail,2)}</td><td class=n>${f(D.bd.full.avail,2)}</td></tr>`+
+  `<tr><td>Reth DB pages in RAM</td><td class=n>${f(D.bd.idle.mdbx,2)}</td><td class=n>${f(D.bd.full.mdbx,2)}</td></tr>`;
+
+// ---- 3. time series
+const NOTES={A:"Run A: 2 GB steps. Steps 6, 8 and 10 GB had swap on (excluded). The run stopped before 20 GB because the step would not fit in free RAM. The node was never more than 2 blocks behind.",
+ B:"Run B: ramp to 12 GB, then 0.5 GB steps from 14 to 18.5 GB. The node stayed under 2 blocks behind the whole time, while disk reads rose as the page cache shrank. The run stopped before 19 GB (0.64 GB free).",
+ C:"Run C: 14 and 14.5 GB passed. At 15 GB Lighthouse stalled. The lag grows in straight lines (1 s per second, no new blocks arrive), then drops when blocks arrive. The step was repeated and failed again. The stall went on after release at 0 GB, so it was not caused by RAM."};
+let RUN="B";
+const sec=s=>{const[h,m,x]=s.split(":").map(Number);return h*3600+m*60+x};
+const hhmm=v=>{v=((v%86400)+86400)%86400;return String(Math.floor(v/3600)).padStart(2,"0")+":"+String(Math.floor(v%3600/60)).padStart(2,"0")};
+function rollmed(a,k){return a.map((_,i)=>{const w=a.slice(Math.max(0,i-k+1),i+1).filter(v=>v!=null).sort((p,q)=>p-q);return w.length?w[w.length>>1]:null})}
+function drawTS(){
+  const box=document.getElementById("ts");box.innerHTML="";
+  const rows=D.series[RUN];if(!rows.length)return;
+  const t0=sec(rows[0][0]);const X=rows.map(r=>{let s=sec(r[0])-t0;return s<0?s+86400:s});
+  const held=rows.map(r=>r[1]),beh=rollmed(rows.map(r=>r[2]),4),disk=rollmed(rows.map(r=>r[3]),8);
+  const W=900,L=56,R=16,top=8,gap=34;
+  const panels=[
+    {name:"PIR server RAM held (GB)",v:held,h:150,max:Math.max(20,...held),col:"--s-pir",step:true,fmt:v=>f(v,1)+" GB"},
+    {name:"Blocks behind head (1-min median)",v:beh,h:170,max:Math.max(5,Math.ceil(Math.max(...beh))),col:"--s-lh",thr:2,fmt:v=>f(v,1)+" blocks"},
+    {name:"Disk reads (MB/s, 2-min median)",v:disk,h:110,max:Math.max(5,Math.ceil(Math.max(...disk.filter(x=>x!=null)))),col:"--s-reth",fmt:v=>f(v,1)+" MB/s"}];
+  const H=top+panels.reduce((a,p)=>a+p.h+gap,0)+10;
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":"Three aligned panels over time: PIR RAM held, blocks behind head, disk reads"},box);
+  const xm=X[X.length-1], x=v=>L+v/xm*(W-L-R);
+  let y0=top;
+  panels.forEach(p=>{
+    p.y0=y0+16;const y=v=>p.y0+p.h-16-(v/p.max)*(p.h-24);p.y=y;
+    const t=el("text",{x:L,y:y0+8,class:"ttl"},svg);t.textContent=p.name;
+    const ticks=[0,p.max/2,p.max];ticks.forEach(v=>{el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),class:"gridl"},svg);
+      const tx=el("text",{x:L-6,y:y(v)+4,"text-anchor":"end",class:"lbl"},svg);tx.textContent=+v.toFixed(1)});
+    if(p.thr!=null){el("line",{x1:L,x2:W-R,y1:y(p.thr),y2:y(p.thr),stroke:css("--ink-3"),"stroke-dasharray":"4 4"},svg);
+      const tx=el("text",{x:W-R,y:y(p.thr)-5,"text-anchor":"end",class:"lbl"},svg);tx.textContent="pass limit: 2 blocks (24 s)"}
+    let d="";p.v.forEach((v,i)=>{if(v==null)return;const px=x(X[i]),py=y(Math.min(v,p.max));
+      if(!d)d=`M${px},${py}`;else d+=p.step?`H${px}V${py}`:`L${px},${py}`});
+    el("path",{d,fill:"none",stroke:css(p.col),"stroke-width":2,"stroke-linejoin":"round"},svg);
+    y0+=p.h+gap;
+  });
+  // stair labels: ramp top, first and last step
+  const P0=panels[0];const lv=[];held.forEach((v,i)=>{if(i&&v!==held[i-1]&&v>0)lv.push([i,v])});
+  const keep=lv.filter(([i,v],k)=>k==lv.length-1||v>=14&&lv[k-1]&&lv[k-1][1]<14||(lv[k+1]&&lv[k+1][1]>=14&&v<14));
+  keep.forEach(([i,v])=>{const tx=el("text",{x:x(X[i])+3,y:P0.y(v)-6,class:"lbl"},svg);tx.textContent=v+" GB"});
+  // release marker
+  const rel=held.findIndex((v,i)=>i&&v==0&&held[i-1]>0);
+  if(rel>0){el("line",{x1:x(X[rel]),x2:x(X[rel]),y1:top+10,y2:H-34,stroke:css("--ink-3"),"stroke-dasharray":"2 4"},svg);
+    const tx=el("text",{x:x(X[rel])+4,y:top+30,class:"lbl"},svg);tx.textContent="released"}
+  // x axis
+  const ax=H-14;for(let s=Math.ceil(t0/3600)*3600-t0;s<=xm;s+=3600){const tx=el("text",{x:x(s),y:ax,"text-anchor":"middle",class:"lbl"},svg);tx.textContent=hhmm(t0+s)+" UTC"}
+  // crosshair
+  const cross=el("line",{y1:top+10,y2:H-30,stroke:css("--ink-2"),"stroke-width":1,visibility:"hidden"},svg);
+  const dots=panels.map(p=>el("circle",{r:4.5,fill:css(p.col),stroke:css("--bg"),"stroke-width":2,visibility:"hidden"},svg));
+  const hit=el("rect",{x:L,y:top,width:W-L-R,height:H-top-24,fill:"transparent"},svg);const t=tip("ts-tip");
+  hit.addEventListener("mousemove",e=>{const bb=svg.getBoundingClientRect();const sx=(e.clientX-bb.left)/bb.width*W;
+    const tv=(sx-L)/(W-L-R)*xm;let i=0,best=1e9;X.forEach((v,k)=>{const dd=Math.abs(v-tv);if(dd<best){best=dd;i=k}});
+    cross.setAttribute("x1",x(X[i]));cross.setAttribute("x2",x(X[i]));cross.setAttribute("visibility","visible");
+    panels.forEach((p,k)=>{const v=p.v[i];if(v==null){dots[k].setAttribute("visibility","hidden");return}
+      dots[k].setAttribute("cx",x(X[i]));dots[k].setAttribute("cy",p.y(Math.min(v,p.max)));dots[k].setAttribute("visibility","visible")});
+    t.show(`<b>${rows[i][0].slice(0,5)} UTC</b><br>PIR held: ${f(held[i],1)} GB<br>Behind: ${f(beh[i],1)} blocks (${f(beh[i]*12,0)} s)<br>Disk reads: ${f(disk[i],1)} MB/s<br>MemAvailable: ${f(rows[i][4],2)} GB`,
+      e.clientX-box.getBoundingClientRect().left,e.clientY-box.getBoundingClientRect().top,box)});
+  hit.addEventListener("mouseleave",()=>{t.hide();cross.setAttribute("visibility","hidden");dots.forEach(d=>d.setAttribute("visibility","hidden"))});
+  document.getElementById("ts-note").textContent=NOTES[RUN];
+}
+document.getElementById("tabs").innerHTML=["A","B","C"].map(r=>`<button aria-pressed="${r==RUN}" data-r="${r}">Run ${r} (10-2${{A:4,B:5,C:6}[r]})</button>`).join("");
+document.getElementById("tabs").addEventListener("click",e=>{const r=e.target.dataset.r;if(!r)return;RUN=r;
+  document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.r==r));drawTS()});
+
+// ---- 4. cost scatter
+const clean=D.steps.filter(s=>s.gb!=null&&s.outcome=="pass"&&!(s.run=="A"&&s.swap>0)&&(s.run=="A"||s.run=="B"));
+function drawDots(id,key,label,col,unit){
+  const box=document.getElementById(id);box.innerHTML="";
+  const W=440,H=260,L=44,R=12,T=26,B=34;const pts=clean.filter(s=>s[key]!=null);
+  const ym=Math.max(...pts.map(s=>s[key]))*1.1;const x=v=>L+v/20*(W-L-R),y=v=>H-B-v/ym*(H-T-B);
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":label+" by PIR RAM held"},box);
+  const tt=el("text",{x:L,y:14,class:"ttl"},svg);tt.textContent=label;
+  [0,ym/2,ym].forEach(v=>{el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),class:"gridl"},svg);const tx=el("text",{x:L-6,y:y(v)+4,"text-anchor":"end",class:"lbl"},svg);tx.textContent=v.toFixed(1)});
+  [0,5,10,15,20].forEach(v=>{const tx=el("text",{x:x(v),y:H-14,"text-anchor":"middle",class:"lbl"},svg);tx.textContent=v});
+  const xl=el("text",{x:W-R,y:H-1,"text-anchor":"end",class:"lbl"},svg);xl.textContent="PIR RAM held (GB)";
+  const t=tip(id+"-tip");
+  pts.forEach(s=>{const c=el("circle",{cx:x(s.gb),cy:y(s[key]),r:5,fill:css(col),stroke:css("--bg"),"stroke-width":2},svg);
+    const h=el("circle",{cx:x(s.gb),cy:y(s[key]),r:12,fill:"transparent"},svg);
+    h.addEventListener("mousemove",e=>{const bb=box.getBoundingClientRect();t.show(`Run ${s.run}, ${s.gb} GB<br>${label}: ${f(s[key],2)} ${unit}`,e.clientX-bb.left,e.clientY-bb.top,box)});
+    h.addEventListener("mouseleave",t.hide)});
+}
+
+// ---- 5 and appendix tables
+const bh=D.behind,pc=(a)=>`${a[0]} of ${a[1].toLocaleString()} (${(100*a[0]/a[1]).toFixed(1)}%)`;
+document.getElementById("behind").innerHTML="<tr><th>Period</th><th class=n>15 s samples more than 60 s behind head</th></tr>"+
+ `<tr><td>Run A steps (PIR 2–18 GB)</td><td class=n>${pc(bh.A)}</td></tr><tr><td>Run B steps (PIR 14–18.5 GB)</td><td class=n>${pc(bh.B)}</td></tr>`+
+ `<tr><td>Run C steps (PIR 14–15 GB, Lighthouse stall at 15 GB)</td><td class=n>${pc(bh.C)}</td></tr><tr><td>No PIR (baseline and rest)</td><td class=n>${pc(bh.idle)}</td></tr>`;
+document.getElementById("steps").innerHTML="<tr><th>Run</th><th class=n>PIR GB</th><th>Outcome</th><th class=n>Lag, last 15 min (s)</th><th class=n>Lag max (s)</th><th class=n>Min MemAvailable (GB)</th><th class=n>Page cache (GB)</th><th class=n>Reth DB in RAM (GB)</th><th class=n>Disk reads (MB/s)</th><th class=n>Read IOPS</th><th class=n>Swap used (GB)</th></tr>"+
+ D.steps.map(s=>`<tr><td>${s.run}</td><td class=n>${s.gb??""}</td><td>${s.outcome}</td><td class=n>${f(s.lag_tail_median_s,1)}</td><td class=n>${s.lag_max_s??""}</td><td class=n>${f(s.mem_available_min_gb,2)}</td><td class=n>${f(s.cache,1)}</td><td class=n>${f(s.mdbx,1)}</td><td class=n>${f(s.disk,1)}</td><td class=n>${f(s.iops,0)}</td><td class=n>${s.gb==null?"":f(s.swap,2)}</td></tr>`).join("");
+
+function drawAll(){drawBD();drawTS();drawDots("c-mdbx","mdbx","Reth DB pages in RAM","--s-cache","GB");drawDots("c-disk","disk","Disk reads","--s-reth","MB/s")}
+drawAll();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",drawAll);
+</script>
+</body>
+</html>
